@@ -1,0 +1,12 @@
+[Unit]
+Description=Send Discord alert on boot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mpy2005
+ExecStart=/home/mpy2005/boot_alert.sh
+
+[Install]
+WantedBy=multi-user.target

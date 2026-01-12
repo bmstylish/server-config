@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+WEBHOOK_URL="XXXXXXXXX"
+
+msg="${1:-"(no message)"}"
+host="$(hostname)"
+ts="$(date -Is)"
+
+# Build the full content string in bash
+content="**${host}** @ ${ts}
+${msg}"
+
+# JSON-escape the content safely
+payload="$(python3 -c 'import json,sys; print(json.dumps({"content": sys.stdin.read()}))' <<< "$content")"
+
+# Post to Discord and show error details if it fails
+http_code="$(curl -sS -o /tmp/discord_resp.txt -w "%{http_code}" \
+  -H "Content-Type: application/json" \
+  -d "$payload" \
+  "$WEBHOOK_URL" || true)"
+
+if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+  echo "Discord webhook failed. HTTP $http_code"
+  echo "Response:"
+  cat /tmp/discord_resp.txt
+  exit 1
+fi
